@@ -1,0 +1,6 @@
+# frozen_string_literal: true
+source 'https://rubygems.org'
+
+gem 'rake'
+gem 'json', '~> 1.4'
+gem 'uuid', git: 'https://github.com/assaf/uuid.git'

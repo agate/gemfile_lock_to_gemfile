@@ -1,0 +1,112 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+options = { custom_sources: {} }
+OptionParser.new do |opts|
+  opts.banner = "Usage: convert [options]"
+
+  opts.on("-fGemfile.lock", "--file=Gemfile.lock", "Provide Gemfile.lock") do |f|
+    options[:file] = f
+  end
+
+  opts.on("-sSOURCE", "--source=SOURCE", "Provide default source for Gemfile") do |s|
+    options[:source] = s
+  end
+
+  opts.on("-c", "--custom-source=GEM:SOURCE", "Provide a custom source for a specific gem") do |s|
+    parsed = s.match(/([^:]+):(.*)/)
+    if parsed[2]
+      options[:custom_sources][parsed[1]] = parsed[2]
+    else
+      $stderr.puts "[WARNING] #{s} is invalid."
+    end
+  end
+
+  opts.on("-h", "--help", "Prints this help") do
+    puts opts
+    exit
+  end
+end.parse!
+
+git_refs = {}
+current_git_ref = nil
+scope = nil
+sources = []
+gems = []
+
+File.readlines(ARGV[0]).each do |line|
+  line = line.sub(/\n/, '')
+  if scope
+    if scope == 'GIT'
+      if match = line.match(/^  ([^ :]+): (.*)/)
+        current_git_ref[match[1]] = match[2]
+      elsif match = line.match(/^    ([^ ]+) (.*)/)
+        current_git_ref['name'] = match[1]
+      elsif line.strip.empty?
+        git_refs[current_git_ref['name']] = current_git_ref
+        current_git_ref = nil
+        scope = nil
+      else
+        # ignore
+      end
+    elsif scope == 'GEM'
+      if match = line.match(/^  remote: (.*)/)
+        sources << match[1]
+      elsif line.strip.empty?
+        scope = nil
+      else
+      end
+    elsif scope == 'PLATFORMS'
+      if line.strip.empty?
+        scope = nil
+      end
+    elsif scope == 'DEPENDENCIES'
+      if match = line.match(/^  ([^ !]+)(!?)(?: \((.*)\))?/)
+        gems << {
+          'name' => match[1],
+          'git' => match[2].nil?,
+          'version' => match[3]
+        }
+      elsif line.strip.empty?
+        scope = nil
+      end
+    elsif scope == 'BUNDLED_WITH'
+      if line.strip.empty?
+        scope = nil
+      end
+    end
+  else
+    if line =~ /^GIT/
+      scope = 'GIT'
+      current_git_ref = {}
+    elsif line =~ /^GEM/
+      scope = 'GEM'
+    elsif line =~ /^DEPENDENCIES/
+      scope = 'DEPENDENCIES'
+    end
+  end
+end
+
+if options[:source]
+  puts "source #{options[:source].inspect}"
+else
+  sources.each do |s|
+    puts "source #{s.inspect}"
+  end
+end
+
+gems.each do |g|
+  line = nil
+
+  if ref = git_refs[g['name']]
+    line = "gem #{g['name'].inspect}, git: #{ref['remote'].inspect}"
+    line += ", ref: #{ref['ref'].inspect}" if ref['ref']
+  else
+    line = "gem #{g['name'].inspect}"
+    line += ", #{g['version'].inspect}" if g['version']
+    line += ", source: #{options[:custom_sources][g['name']].inspect}" if options[:custom_sources][g['name']]
+  end
+
+  puts line
+end
