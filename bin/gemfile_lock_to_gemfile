@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+
+($LOAD_PATH << File.expand_path("../../lib", __FILE__)).uniq!
+require 'gemfile_lock_to_gemfile'
+
+options = { custom_sources: {} }
+OptionParser.new do |opts|
+  opts.banner = "Usage: gemfile_lock_to_gemfile [options]"
+
+  opts.on("-fGemfile.lock", "--file=Gemfile.lock", "Provide Gemfile.lock") do |f|
+    options[:file] = f
+  end
+
+  opts.on("-sSOURCE", "--source=SOURCE", "Provide default source for Gemfile") do |s|
+    options[:source] = s
+  end
+
+  opts.on("-c", "--custom-source=GEM:SOURCE", "Provide a custom source for a specific gem") do |s|
+    parsed = s.match(/([^:]+):(.*)/)
+    if parsed[2]
+      options[:custom_sources][parsed[1]] = parsed[2]
+    else
+      $stderr.puts "[WARNING] #{s} is invalid."
+    end
+  end
+
+  opts.on("-h", "--help", "Prints this help") do
+    puts opts
+    exit
+  end
+end.parse!
+
+lock_content = File.read(ARGV[0])
+
+puts GemfileLockToGemfile::Converter.convert(lock_content, options)
