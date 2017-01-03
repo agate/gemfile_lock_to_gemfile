@@ -5,7 +5,7 @@ Gem::Specification.new do |s|
   s.version      = "0.1.0"
   s.date         = Time.now.strftime('%Y-%m-%d')
   s.summary      = "A tool for reversing `Gemfile.lock` -> `Gemfile`"
-  s.homepage     = "http://github.com//gemfile_lock_to_gemfile"
+  s.homepage     = "https://github.com/agate/gemfile_lock_to_gemfile"
   s.email        = "agate.hao@gmail.com"
   s.authors      = [ "agate" ]
   s.has_rdoc     = false
