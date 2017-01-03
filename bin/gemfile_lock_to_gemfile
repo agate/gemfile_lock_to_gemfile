@@ -4,10 +4,10 @@
 require 'gemfile_lock_to_gemfile'
 
 options = { custom_sources: {} }
-OptionParser.new do |opts|
-  opts.banner = "Usage: gemfile_lock_to_gemfile [options]"
+optparse = OptionParser.new do |opts|
+  opts.banner = "Usage: gemfile_lock_to_gemfile [options] -fGemfile.lock"
 
-  opts.on("-fGemfile.lock", "--file=Gemfile.lock", "Provide Gemfile.lock") do |f|
+  opts.on("-fGemfile.lock", "--file=Gemfile.lock", "[required] Provide Gemfile.lock") do |f|
     options[:file] = f
   end
 
@@ -28,8 +28,18 @@ OptionParser.new do |opts|
     puts opts
     exit
   end
-end.parse!
+end
+  
+begin
+  optparse.parse!
 
-lock_content = File.read(ARGV[0])
+  raise OptionParser::MissingArgument.new("--file") unless options[:file]
 
-puts GemfileLockToGemfile::Converter.convert(lock_content, options)
+  lock_content = File.read(options[:file])
+  puts GemfileLockToGemfile::Converter.convert(lock_content, options)
+rescue OptionParser::MissingArgument
+  puts $!.to_s
+  puts optparse
+  exit
+end
+

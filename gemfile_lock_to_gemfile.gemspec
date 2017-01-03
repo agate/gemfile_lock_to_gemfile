@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name         = "gemfile_lock_to_gemfile"
-  s.version      = "0.1.0"
+  s.version      = "0.1.2"
   s.date         = Time.now.strftime('%Y-%m-%d')
   s.summary      = "A tool for reversing `Gemfile.lock` -> `Gemfile`"
   s.homepage     = "https://github.com/agate/gemfile_lock_to_gemfile"
@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.authors      = [ "agate" ]
   s.has_rdoc     = false
 
-  s.files        = %w( README.md Rakefile LICENSE )
+  s.files        = %w( README.md Rakefile LICENSE gemfile_lock_to_gemfile.gemspec )
   s.files       += Dir.glob("lib/**/*")
   s.files       += Dir.glob("bin/**/*")
   s.files       += Dir.glob("man/**/*")
